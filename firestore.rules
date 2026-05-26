@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(coupleId) {
+      return isSignedIn() && request.auth.uid == coupleId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Schema Validation Helpers
+    function isValidCoupleProfile(data) {
+      return data.wifeName is string && data.wifeName.size() > 0 && data.wifeName.size() <= 100
+          && data.husbandName is string && data.husbandName.size() > 0 && data.husbandName.size() <= 100
+          && (request.resource.data.keys().hasAll(['wifeName', 'husbandName']) && request.resource.data.keys().size() <= 8);
+    }
+
+    function isValidTransaction(data) {
+      return data.id is string && isValidId(data.id)
+          && data.amount is number && data.amount >= 0
+          && data.category is string && data.category.size() <= 128
+          && data.date is string && data.date.size() <= 32
+          && data.notes is string && data.notes.size() <= 1024
+          && data.wallet is string && data.wallet in ['shared', 'wife', 'husband']
+          && data.type is string && data.type in ['income', 'expense', 'savings', 'debt']
+          && data.addedBy is string && data.addedBy in ['wife', 'husband'];
+    }
+
+    function isValidSavingsGoal(data) {
+      return data.id is string && isValidId(data.id)
+          && data.title is string && data.title.size() <= 256
+          && data.targetAmount is number && data.targetAmount >= 0
+          && data.savedAmount is number && data.savedAmount >= 0
+          && data.deadline is string && data.deadline.size() <= 32
+          && data.completed is bool
+          && data.category is string && data.category.size() <= 128;
+    }
+
+    function isValidNotificationItem(data) {
+      return data.id is string && isValidId(data.id)
+          && data.title is string && data.title.size() <= 256
+          && data.message is string && data.message.size() <= 2048
+          && data.date is string && data.date.size() <= 64
+          && data.read is bool
+          && data.type is string && data.type in ['info', 'alert', 'success', 'celebration'];
+    }
+
+    function isValidBunaDate(data) {
+      return data.id is string && isValidId(data.id)
+          && data.date is string && data.date.size() <= 32
+          && data.brewer is string && data.brewer in ['wife', 'husband']
+          && data.notes is string && data.notes.size() <= 2048;
+    }
+
+    // Couple Document Rules
+    match /couples/{coupleId} {
+      allow read: if isOwner(coupleId);
+      allow create: if isOwner(coupleId) && isValidCoupleProfile(request.resource.data);
+      allow update: if isOwner(coupleId) && isValidCoupleProfile(request.resource.data);
+      allow delete: if false;
+
+      // Transactions sub-collection
+      match /transactions/{transactionId} {
+        allow read, list: if isOwner(coupleId);
+        allow create: if isOwner(coupleId) && isValidId(transactionId) && isValidTransaction(request.resource.data);
+        allow update: if isOwner(coupleId) && isValidId(transactionId) && isValidTransaction(request.resource.data)
+                      && request.resource.data.id == resource.data.id;
+        allow delete: if isOwner(coupleId);
+      }
+
+      // Goals sub-collection
+      match /goals/{goalId} {
+        allow read, list: if isOwner(coupleId);
+        allow create: if isOwner(coupleId) && isValidId(goalId) && isValidSavingsGoal(request.resource.data);
+        allow update: if isOwner(coupleId) && isValidId(goalId) && isValidSavingsGoal(request.resource.data)
+                      && request.resource.data.id == resource.data.id;
+        allow delete: if isOwner(coupleId);
+      }
+
+      // Notifications sub-collection
+      match /notifications/{notificationId} {
+        allow read, list: if isOwner(coupleId);
+        allow create: if isOwner(coupleId) && isValidId(notificationId) && isValidNotificationItem(request.resource.data);
+        allow update: if isOwner(coupleId) && isValidId(notificationId) && isValidNotificationItem(request.resource.data)
+                      && request.resource.data.id == resource.data.id;
+        allow delete: if isOwner(coupleId);
+      }
+
+      // Buna Dates sub-collection
+      match /buna_dates/{bunaId} {
+        allow read, list: if isOwner(coupleId);
+        allow create: if isOwner(coupleId) && isValidId(bunaId) && isValidBunaDate(request.resource.data);
+        allow update: if isOwner(coupleId) && isValidId(bunaId) && isValidBunaDate(request.resource.data)
+                      && request.resource.data.id == resource.data.id;
+        allow delete: if isOwner(coupleId);
+      }
+    }
+  }
+}

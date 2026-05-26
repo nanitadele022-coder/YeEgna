@@ -1,0 +1,219 @@
+{
+  "entities": {
+    "CoupleProfile": {
+      "title": "CoupleProfile",
+      "description": "Information representing the romantic couple and their nested settings and budgets.",
+      "type": "object",
+      "properties": {
+        "wifeName": {
+          "type": "string",
+          "description": "Wife's first name."
+        },
+        "husbandName": {
+          "type": "string",
+          "description": "Husband's first name."
+        },
+        "avatarWife": {
+          "type": "string",
+          "description": "Emoji avatar representative for the wife."
+        },
+        "avatarHusband": {
+          "type": "string",
+          "description": "Emoji avatar representative for the husband."
+        },
+        "anniversaryDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Anniversary date of the union."
+        },
+        "budget": {
+          "type": "object",
+          "description": "Shared monthly spending plan limits."
+        }
+      },
+      "required": ["wifeName", "husbandName"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A single financial activity representing Money In or Money Out.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Match ID used for lookup."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Numeric money amount in Birr."
+        },
+        "category": {
+          "type": "string",
+          "description": "Spending/income category class."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "User-entered activity date."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Cozy contextual note on the record."
+        },
+        "wallet": {
+          "type": "string",
+          "enum": ["shared", "wife", "husband"],
+          "description": "Target budget wallet context."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["income", "expense", "savings", "debt"],
+          "description": "Type of capital transaction."
+        },
+        "addedBy": {
+          "type": "string",
+          "enum": ["wife", "husband"],
+          "description": "Partner who recorded this activity."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Database insertion server timestamp."
+        }
+      },
+      "required": ["id", "amount", "category", "date", "wallet", "type", "addedBy"]
+    },
+    "SavingsGoal": {
+      "title": "SavingsGoal",
+      "description": "A shared romantic milestone goal or future dream.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Match ID used for lookup."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the dream goal."
+        },
+        "targetAmount": {
+          "type": "number",
+          "description": "Target target money amount needed."
+        },
+        "savedAmount": {
+          "type": "number",
+          "description": "Amount already aggregated."
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date",
+          "description": "Goal timeline target date."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the goal is completed."
+        },
+        "category": {
+          "type": "string",
+          "description": "Goal semantic grouping classification."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Database update server timestamp."
+        }
+      },
+      "required": ["id", "title", "targetAmount", "savedAmount", "deadline", "completed", "category"]
+    },
+    "NotificationItem": {
+      "title": "NotificationItem",
+      "description": "Shared notification whispering items.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Match ID used for lookup."
+        },
+        "title": {
+          "type": "string",
+          "description": "Header title of the notification alert."
+        },
+        "message": {
+          "type": "string",
+          "description": "Verbal context of the alert."
+        },
+        "date": {
+          "type": "string",
+          "description": "Formatted date of the notification."
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether the notification has been read."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["info", "alert", "success", "celebration"],
+          "description": "Typology of notification."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Database insertion server timestamp."
+        }
+      },
+      "required": ["id", "title", "message", "date", "read", "type"]
+    },
+    "BunaDate": {
+      "title": "BunaDate",
+      "description": "Information tracking shared coffee (Buna) dates and romantic financial agreements.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique record identifier."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of the ceremony."
+        },
+        "brewer": {
+          "type": "string",
+          "enum": ["wife", "husband"],
+          "description": "Partner who hosted/brewed the coffee."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes on budget discussions or romance goals."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        }
+      },
+      "required": ["id", "date", "brewer", "notes"]
+    }
+  },
+  "firestore": {
+    "/couples/{coupleId}": {
+      "schema": "CoupleProfile",
+      "description": "Unique shared couple profile node containing names, budget limits, anniversary settings."
+    },
+    "/couples/{coupleId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Cozy ledger subcollection for physical money activities."
+    },
+    "/couples/{coupleId}/goals/{goalId}": {
+      "schema": "SavingsGoal",
+      "description": "Savings subcollection for shared dreams and pursuits."
+    },
+    "/couples/{coupleId}/notifications/{notificationId}": {
+      "schema": "NotificationItem",
+      "description": "Whisper subcollection for alerts and celebrations."
+    },
+    "/couples/{coupleId}/buna_dates/{bunaId}": {
+      "schema": "BunaDate",
+      "description": "Subcollection tracking traditional Ethiopian coffee ceremonies and financial consensus."
+    }
+  }
+}

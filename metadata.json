@@ -1,0 +1,8 @@
+{
+  "name": "YeEgna",
+  "description": "A modern, cute luxury finance app for couples to track shared budget, check personal expenses, save for shared dreams, and receive romantic AI financial insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
